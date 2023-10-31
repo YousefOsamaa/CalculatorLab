@@ -18,6 +18,8 @@ char key [4][4] = {
 	{'*','0','=','/'},
 };
 
+char KeyStatus [4][4] =  {NOT_PRESSED};
+
 char keypad_scan()
 {
 	INPUT_PORT_DIRECTION &=~0xFF;//rows as inputs
@@ -33,13 +35,27 @@ char keypad_scan()
 		
 		for(int j=0; j<4; j++)
 		{
-			if( (INPUT_PIN & (1 << j)) == 0) // checks if input from rows is also 0 (Active Low)
+			if( ((INPUT_PIN & (1 << j)) == 0) ) // checks if input from rows is also 0 (Active Low)
 			{
-				debounce(j);
+				if(KeyStatus[j][i] == NOT_PRESSED)
+				{
+
+					// debounce(j);
+					
+					// while(button == 0) debounce(j); //handling long press on key in the function
+					
+					KeyStatus[j][i]  = PRESSED;
+					
+					return key[j][i];
+				}
 				
-				while(button == 0) debounce(j); //handling long press on key in the function
 				
-				return key[j][i];
+			}
+			else
+			{
+
+				KeyStatus[j][i]  = NOT_PRESSED;
+				
 			}
 			
 		}

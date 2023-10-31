@@ -98,11 +98,24 @@ void Calculator(void)
             {
                 KeyPressed = keypad_scan();
 
-                if ( (KeyPressed >= '0' ) && (KeyPressed <= '9') )
+                if( KeyPressed == '-')
+                {
+                    LCD_GoToXY(0,4);
+
+                    NegativeFlag = True;
+
+                    LCD_PutChar('-');
+                }
+                else if ( (KeyPressed >= '0' ) && (KeyPressed <= '9') )
                 {
                     SecondDigit = KeyPressed - 48;
+                    
+                    if(NegativeFlag)
+                    {
+                        SecondDigit *= -1;
 
-                    LCD_GoToXY(0,4);
+                        NegativeFlag = False;
+                    }
 
                     LCD_PutChar(KeyPressed);
 

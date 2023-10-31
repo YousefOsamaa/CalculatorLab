@@ -17,6 +17,9 @@
 #define OUTPUT_PORT				PORTB
 #define KEYPAD_DEFAULT_VALUE    0xFF
 
+#define PRESSED      1
+#define NOT_PRESSED  0
+
 
 char keypad_scan();
 
