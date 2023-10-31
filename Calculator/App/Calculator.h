@@ -2,6 +2,8 @@
 #ifndef CALCULATOR_H_
 #define CALCULATOR_H_
 
+#include <stdio.h>
+
 typedef enum
 {
     CALCULATOR_FIRST_DIGIT,
@@ -12,6 +14,8 @@ typedef enum
     CALCULATOR_CLEAR_RESULT,
 
 }State_t;
+
+#define FLOAT_PRECISION  3
 
 extern void CalculatorInitialzie(void);
 

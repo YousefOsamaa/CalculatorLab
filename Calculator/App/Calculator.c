@@ -8,7 +8,12 @@
 
 
 
-static void vid_ConvertFloatToInteger(f32* Copy_f32_DecimalDigits, u8 Copy_u8_FloatPrecision);
+void vid_ConvertFloatToInteger(f32* Copy_f32_DecimalDigits, u8 Copy_u8_FloatPrecision);
+
+void vid_ReverseInteger(u32* Copy_pu32_Num);
+
+u32 vid_CountNumber(u32 Num);
+
 
 
 void CalculatorInitialzie(void)
@@ -22,10 +27,12 @@ void Calculator(void)
 
     u8 KeyPressed = KEYPAD_DEFAULT_VALUE;
 
-    u8 FirstDigit;
-    u8 SecondDigit;
+    s32 FirstDigit;
+    s32 SecondDigit;
     u8 Operation;
 
+    u8 NegativeFlag = False;
+	
     while (1)
     {
 
@@ -36,11 +43,26 @@ void Calculator(void)
 
                 KeyPressed = keypad_scan();
 
-                if ( (KeyPressed >= '0' ) && (KeyPressed <= '9') )
-                {
-                    FirstDigit = KeyPressed - 48;
 
+                if( KeyPressed == '-')
+                {
                     LCD_GoToXY(0,0);
+
+                    NegativeFlag = True;
+
+                    LCD_PutChar('-');
+                }
+                else if ( (KeyPressed >= '0' ) && (KeyPressed <= '9') )
+                {
+                    
+                    FirstDigit = (KeyPressed - 48);
+
+                    if(NegativeFlag)
+                    {
+                        FirstDigit *= -1;
+
+                        NegativeFlag = False;
+                    }
 
                     LCD_PutChar(KeyPressed);
 
@@ -113,17 +135,43 @@ void Calculator(void)
         
             case CALCULATOR_RESULT:
             {
-                u8 Result;
+                s32 Result;
 
                 switch (Operation)
                 {
                     case '+':
                     {
                         Result = FirstDigit + SecondDigit;
-
+						
                         LCD_GoToXY(0, 8);
 
-                        LCD_PutChar(Result + 48);
+                        if(Result < 0 )
+                        {
+                            LCD_PutChar('-');
+
+                            Result *= -1;
+
+                        }   
+
+						u32 Count = vid_CountNumber(Result);
+
+                        vid_ReverseInteger(Result);
+
+                        while (Result)
+                        {
+                            LCD_PutChar((Result % 10) + 48);
+
+                            Result /= 10;
+
+                            Count--;    
+                        }
+
+                        while(Count)
+                        {
+                            LCD_PutChar('0');
+                            
+                            Count--;
+                        }
 
                         break;
                     }
@@ -135,37 +183,94 @@ void Calculator(void)
 
                         LCD_GoToXY(0, 8);
 
-                        LCD_PutChar(Result + 48);
+                        if(Result < 0 )
+                        {
+                            LCD_PutChar('-');
+
+                            Result *= -1;
+                        }                        
+                        
+                        u32 Count = vid_CountNumber(Result);
+
+                        vid_ReverseInteger(&Result);
+
+                        while (Result)
+                        {
+                            LCD_PutChar((Result % 10) + 48);
+
+                            Result /= 10;
+
+                            Count--;    
+                        }
+
+                        while(Count)
+                        {
+                            LCD_PutChar('0');
+                            
+                            Count--;
+                        }
 
                         break;
                     }
 
                     case 'x':
                     {
-
+                        
                         Result = FirstDigit * SecondDigit;
 
                         LCD_GoToXY(0, 8);
 
-                        LCD_PutChar(Result + 48);
+                        if(Result < 0 )
+                        {
+                            LCD_PutChar('-');
+
+                            Result *= -1;
+                        }                        
+                        
+                        u32 Count = vid_CountNumber(Result);
+
+                        vid_ReverseInteger(&Result);
+
+                        while (Result)
+                        {
+                            LCD_PutChar((Result % 10) + 48);
+
+                            Result /= 10;
+
+                            Count--;    
+                        }
+
+                        while(Count)
+                        {
+                            LCD_PutChar('0');
+                            
+                            Count--;
+                        }
 
                         break;
                     }
 
                     case '/':
                     {
-                        f32 FloatResultPart = (f32)FirstDigit / SecondDigit;
-
-                        u8 IntegerResultPart = FloatResultPart;
-
-                        FloatResultPart = FloatResultPart - IntegerResultPart;
-
-                        vid_ConvertFloatToInteger(&FloatResultPart, 2);
-
-
+                        f32 FloatResultPart = (((f32)FirstDigit) / SecondDigit);
 
                         LCD_GoToXY(0, 8);
 
+                        if(FloatResultPart < 0 )
+                        {
+                            LCD_PutChar('-');
+
+                            FloatResultPart *= -1;
+                        }   
+
+                        u32 IntegerResultPart = FloatResultPart;
+
+                        FloatResultPart = FloatResultPart - (f32)IntegerResultPart;
+
+                        u8 DecimalDigitsCount = FLOAT_PRECISION;
+
+                        vid_ConvertFloatToInteger(&FloatResultPart, DecimalDigitsCount);
+                        
                         LCD_PutChar(IntegerResultPart + 48);
 
                         if(FloatResultPart != 0)
@@ -174,12 +279,24 @@ void Calculator(void)
 
                             //Using IntegerResultPart for safety
                             IntegerResultPart = FloatResultPart;
+
+                            vid_ReverseInteger(&IntegerResultPart);
                             
-                            while (IntegerResultPart)
+                            while (DecimalDigitsCount)
                             {
                                 LCD_PutChar((IntegerResultPart % 10) + 48);
 
                                 IntegerResultPart /= 10;
+
+                                DecimalDigitsCount--;
+                            }
+
+                            //To Print any lost zeroes when the num was reversed
+                            while(DecimalDigitsCount)
+                            {
+                                LCD_PutChar('0');
+
+                                DecimalDigitsCount--;
                             }
                             
                         }
@@ -217,7 +334,7 @@ void Calculator(void)
     }
 }
 
-static void vid_ConvertFloatToInteger(f32* Copy_f32_DecimalDigits, u8 Copy_u8_FloatPrecision)
+void vid_ConvertFloatToInteger(f32* Copy_f32_DecimalDigits, u8 Copy_u8_FloatPrecision)
 {
     u32 Local_u32_CheckVariable = 0;
     f32 Local_f32_TempDecimalDigits;
@@ -234,7 +351,7 @@ static void vid_ConvertFloatToInteger(f32* Copy_f32_DecimalDigits, u8 Copy_u8_Fl
             Copy_u8_FloatPrecision--;
 
         }
-
+    
 
         Local_f32_TempDecimalDigits = *Copy_f32_DecimalDigits - Local_u32_CheckVariable;
         
@@ -248,12 +365,40 @@ static void vid_ConvertFloatToInteger(f32* Copy_f32_DecimalDigits, u8 Copy_u8_Fl
         {
             *Copy_f32_DecimalDigits++;
         }
-
-    }
-    
+	}
 }
 
-static void PrintResult(f32 Copy_f32_Result)
+void vid_ReverseInteger(u32* Copy_pu32_Num)
 {
+    //Must cast any to u32 when using this function
+
+    if(Copy_pu32_Num)
+    {   
+        u32 Local_u32_ReversedNum = 0;
+        while(*Copy_pu32_Num)
+        {
+            Local_u32_ReversedNum = (Local_u32_ReversedNum*10) + (*Copy_pu32_Num % 10);
+            *Copy_pu32_Num /= 10;
+        }
+
+        *Copy_pu32_Num = Local_u32_ReversedNum;
+
+    }
+
+}
+
+u32 vid_CountNumber(u32 Num)
+{
+    u32 Count = 0;
+
+    do
+    {
+        Num /= 10;
+
+        Count++;
+
+    }while(Num);
+
+    return Count;
 
 }

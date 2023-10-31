@@ -24,7 +24,7 @@ char keypad_scan()
 	OUTPUT_PORT_DIRECTION &=~0xFF;//columns
 
 	//Activating Pull up resistor for PORTC 0:3
-	INPUR_PORT|=0xFF;
+	INPUR_PORT |= 0xFF;
 	
 	for(int i=0; i<4; i++)
 	{
